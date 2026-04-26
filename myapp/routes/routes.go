@@ -16,6 +16,9 @@ func InitializeRoutes() {
 	router.HandleFunc("/student/update/{sid}", controller.UpdateStudent).Methods("PUT")
 	router.HandleFunc("/student/{sid}", controller.DeleteStudent).Methods("DELETE")
 
+	fhandler := http.FileServer(http.Dir("../view"))
+	router.PathPrefix("/").Handler(fhandler)
+
 	log.Println("Application running on port", port)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -114,3 +114,20 @@ func GetAllStudents(w http.ResponseWriter, r *http.Request) {
 	}
 	httpResp.RespondWithJSON(w, http.StatusOK, students)
 }
+
+func Signup(w http.ResponseWriter, r *http.Request) {
+	var admin model.Admin
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&admin); err != nil {
+		httpResp.RespondWithError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+	defer r.Body.Close()
+	saveErr := admin.Create()
+	if saveErr != nil {
+		httpResp.RespondWithError(w, http.StatusBadRequest, saveErr.Error())
+		return
+	}
+	// no error
+	httpResp.RespondWithJSON(w, http.StatusCreated, map[string]string{"status": "admin added"})
+}
