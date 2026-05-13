@@ -20,6 +20,9 @@ func InitializeRoutes() {
 	router.HandleFunc("/signUp", controller.Signup).Methods("POST")
 	router.HandleFunc("/login", controller.Login).Methods("POST")
 
+	fhandler := http.FileServer(http.Dir("./views"))
+	router.PathPrefix("/").Handler(fhandler)
+
 	log.Println("Application running on port", port)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
