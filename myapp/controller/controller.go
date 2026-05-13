@@ -13,6 +13,10 @@ import (
 )
 
 func AddStudent(w http.ResponseWriter, r *http.Request) {
+	// validate cookie
+	if !VerifyCookie(w, r) {
+		return
+	}
 	// create variable type student
 	var stud model.Student
 
@@ -113,21 +117,4 @@ func GetAllStudents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpResp.RespondWithJSON(w, http.StatusOK, students)
-}
-
-func Signup(w http.ResponseWriter, r *http.Request) {
-	var admin model.Admin
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&admin); err != nil {
-		httpResp.RespondWithError(w, http.StatusBadRequest, "invalid json body")
-		return
-	}
-	defer r.Body.Close()
-	saveErr := admin.Create()
-	if saveErr != nil {
-		httpResp.RespondWithError(w, http.StatusBadRequest, saveErr.Error())
-		return
-	}
-	// no error
-	httpResp.RespondWithJSON(w, http.StatusCreated, map[string]string{"status": "admin added"})
 }

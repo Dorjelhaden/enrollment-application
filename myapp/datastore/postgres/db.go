@@ -10,11 +10,11 @@ import (
 
 // Database connection details
 const (
-	postgres_host     = "db"
+	postgres_host     = "dpg-d7tbdcf7f7vs73fajq0g-a"
 	postgres_port     = 5432
-	postgres_user     = "postgres"
-	postgres_password = "postgres"
-	postgres_dbname   = "my_db"
+	postgres_user     = "postgres_admin"
+	postgres_password = "JXDbYy1ZkE3RMRv9zM7xUPO3XJeNxG5D"
+	postgres_dbname   = "mydb_fty5"
 )
 
 // Global pointer to the database connection
@@ -24,7 +24,7 @@ var Db *sql.DB
 func init() {
 	// Build connection string
 	db_info := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=require",
 		postgres_host, postgres_port, postgres_user, postgres_password, postgres_dbname,
 	)
 

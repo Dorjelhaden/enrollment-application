@@ -26,18 +26,24 @@ function addStudent(){
         body: JSON.stringify(data),
         headers: {"Content-type": "application/json; charset=UTP-8"}
 
-    }).then(response1 => {
+    }).then(response => {
         var sid = data.stdid;
         if (response1.ok){
             fetch('/student/'+sid)
-            .then(response2 => response2.text())
+            .then(response => response.text())
             .then(data => showStudent(data))
         } else {
-            throw new Error(response1.statusText)
+            throw new Error(response.status)//new keyword constructs a this obj and assign {name: "error", message:""}
+
         }    
         
 }).catch(e => {
-    alert(e)
+    if (e.message == 303) {
+        alert("User not logged in.")
+        window.open("index.html", "_self")
+    }else if (e.message == 500) {
+        alert("Server error!")
+    }
 })
 resetform();
 }
