@@ -33,6 +33,7 @@ func InitializeRoutes() {
 
 	router.HandleFunc("/courses", controller.AddCourse).Methods("POST")
 	router.HandleFunc("/courses", controller.GetAllCourses).Methods("GET")
+	router.HandleFunc("/courses/{cid}", controller.UpdateCourse).Methods("PUT")
 	router.HandleFunc("/courses/{cid}", controller.DeleteCourse).Methods("DELETE")
 
 	router.HandleFunc("/signup", controller.Signup).Methods("POST")
