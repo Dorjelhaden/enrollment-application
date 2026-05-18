@@ -8,25 +8,22 @@ type Enroll struct {
 	Date_Enrolled string `json:"date"`
 }
 
-const queryEnrollStd = "INSERT INTO enroll(std_id, course_id, data_enrolled) VALUES($1, $2, $3) RETURNING std_id;"
-const queryGetEnroll = "SEELCT std_id, course_id, date_enrolled FROM enroll WHERE std_id=$1 and course_id=$2;"
-const queryDeleteEnroll = "DELETE FROM enroll WHERE std_id=$1 and course_id=$2 RETURNING std_id;"
+const queryEnrollStd = "INSERT INTO enroll (std_id, course_id, date_enrolled) VALUES ($1, $2, $3) RETURNING std_id;"
+const queryGetEnroll = "SELECT std_id, course_id, date_enrolled FROM enroll WHERE std_id=$1 AND course_id=$2;"
+const queryDeleteEnroll = "DELETE FROM enroll WHERE std_id=$1 AND course_id=$2 RETURNING std_id;"
 
 func (e *Enroll) EnrollStud() error {
 	row := postgres.Db.QueryRow(queryEnrollStd, e.StdId, e.CourseID, e.Date_Enrolled)
-	err := row.Scan(&e.StdId)
-	return err
-
+	return row.Scan(&e.StdId)
 }
+
 func (e *Enroll) Get() error {
 	return postgres.Db.QueryRow(queryGetEnroll, e.StdId, e.CourseID).Scan(&e.StdId, &e.CourseID, &e.Date_Enrolled)
-
 }
 
 func (e *Enroll) Delete() error {
 	row := postgres.Db.QueryRow(queryDeleteEnroll, e.StdId, e.CourseID)
-	err := row.Scan(&e.StdId)
-	return err
+	return row.Scan(&e.StdId)
 }
 
 func GetAllEnrolls() ([]Enroll, error) {

@@ -4,15 +4,15 @@ import "myapp/datastore/postgres"
 
 type Student struct {
 	StdId     int64  `json:"stdid"`
-	FirstName string `json:"fname"`
-	LastName  string `json:"lname"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 }
 
-const queryInsertStudent = "INSERT INTO students (stdid, firstname, last_name, email) VALUES ($1, $2, $3, $4);"
-const queryGetUser = "SELECT stdid, firstname, last_name, email FROM students WHERE stdid = $1;"
-const queryUpdate = "UPDATE students SET stdid=$1, firstname=$2, lastname=$3, email=$4 WHERE stdid=$5 RETURNING stdid;"
-const queryDelete = "DELETE FROM students WHERE stdid=$1; RETURNING stdid;"
+const queryInsertStudent = "INSERT INTO student (StdId, FirstName, LastName, Email) VALUES ($1, $2, $3, $4);"
+const queryGetUser = "SELECT StdId, FirstName, LastName, Email FROM student WHERE StdId = $1;"
+const queryUpdate = "UPDATE student SET StdId=$1, FirstName=$2, LastName=$3, Email=$4 WHERE StdId=$5 RETURNING StdId;"
+const queryDelete = "DELETE FROM student WHERE StdId=$1 RETURNING StdId;"
 
 func (s *Student) Create() error {
 	_, err := postgres.Db.Exec(queryInsertStudent, s.StdId, s.FirstName, s.LastName, s.Email)
@@ -33,7 +33,7 @@ func (s *Student) Delete() error {
 	return nil
 }
 func GetAllStudents() ([]Student, error) {
-	rows, getErr := postgres.Db.Query("SELECT * FROM students;")
+	rows, getErr := postgres.Db.Query("SELECT * FROM student;")
 	if getErr != nil {
 		return nil, getErr
 	}
