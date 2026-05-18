@@ -2,14 +2,23 @@ package routes
 
 import (
 	"log"
-	"myapp/controller"
 	"net/http"
+	"os"
+	"path/filepath"
+
+	"myapp/controller"
 
 	"github.com/gorilla/mux"
 )
 
 func InitializeRoutes() {
-	var port = 8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	staticPath := findStaticPath()
+
 	router := mux.NewRouter()
 	router.HandleFunc("/student/add", controller.AddStudent).Methods("POST")
 	router.HandleFunc("/home/{sid}", controller.GetStudent).Methods("GET")
@@ -17,12 +26,30 @@ func InitializeRoutes() {
 	router.HandleFunc("/student/{sid}", controller.DeleteStudent).Methods("DELETE")
 	router.HandleFunc("/students", controller.GetAllStudents)
 
-	router.HandleFunc("/signUp", controller.Signup).Methods("POST")
+	router.HandleFunc("/signup", controller.Signup).Methods("POST")
 	router.HandleFunc("/login", controller.Login).Methods("POST")
+	router.HandleFunc("/logout", controller.Logout).Methods("GET")
 
-	fhandler := http.FileServer(http.Dir("./views"))
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(staticPath, "index.html"))
+	}).Methods("GET")
+
+	fhandler := http.FileServer(http.Dir(staticPath))
 	router.PathPrefix("/").Handler(fhandler)
 
 	log.Println("Application running on port", port)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+func findStaticPath() string {
+	if _, err := os.Stat("view"); err == nil {
+		return "view"
+	}
+
+	if _, err := os.Stat(filepath.Join("myapp", "view")); err == nil {
+		return filepath.Join("myapp", "view")
+	}
+
+	log.Fatal("static view folder not found")
+	return ""
 }

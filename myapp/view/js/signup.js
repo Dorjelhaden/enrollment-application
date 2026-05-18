@@ -5,21 +5,25 @@ function signUp() {
         lastname : document.getElementById("lname").value,
         email : document.getElementById("email").value,
         password : document.getElementById("pw1").value,
-        pw : document.getElementById(pw2).value
+        pw : document.getElementById("pw2").value
     }
-    if (_data.password !==_data.pw) {
+    if (_data.password !== _data.pw) {
         alert("PASSWORD doesn't match!")
         return
     }
     fetch('/signup', {
         method: "POST",
-        body:JSON.stringify(_data),
-        headers: {"COntent-type": "application/json; charset=UTP-8"}
+        body: JSON.stringify(_data),
+        headers: {"Content-Type": "application/json; charset=UTF-8"}
     })
     .then(response => {
         if (response.status == 201) {
-            // console.log("logged in")
-            window.open("login.html", "_self")
+            window.open("index.html", "_self")
+        } else {
+            return response.text().then(text => { throw new Error(text) })
         }
+    })
+    .catch(err => {
+        alert("Signup failed: " + err.message)
     });
 }
