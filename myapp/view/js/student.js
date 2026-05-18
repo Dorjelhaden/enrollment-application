@@ -1,230 +1,173 @@
-function addStudent(){
-    var data = {
-        stdid : parseInt(document.getElementById("sid").value),
-        fname : document.getElementById("fname").value,
-        lname : document.getElementById("lname").value,
-        email : document.getElementById("email").value,
+let selectedRow = null
+let selectedSid = null
 
+function getFormData() {
+    return {
+        stdid: parseInt(document.getElementById("sid").value),
+        firstname: document.getElementById("fname").value,
+        lastname: document.getElementById("lname").value,
+        email: document.getElementById("email").value,
     }
-    var sid = data.stdid
-    if(isNaN(sid)) {
-        alert("Enter vaild student ID")
-        return
-    }else if (data.email == "") {
+}
+
+function validateFormData(data) {
+    if (isNaN(data.stdid) || data.stdid <= 0) {
+        alert("Enter valid student ID")
+        return false
+    }
+    if (!data.firstname) {
+        alert("First name cannot be empty")
+        return false
+    }
+    if (!data.email) {
         alert("Email cannot be empty")
-        return
-    }else if(data.fname == ""){
-        alert("first name cannot be empty")
+        return false
+    }
+    return true
+}
+
+function addStudent() {
+    const data = getFormData()
+    if (!validateFormData(data)) {
         return
     }
 
-    console.log(data)
-
-    var data = getFormData()
-    fetch('/student', {
+    fetch('/student/add', {
         method: "POST",
-        body: JSON.stringify(data),
-        headers: {"Content-type": "application/json; charset=UTP-8"}
-
-    }).then(response => {
-        var sid = data.stdid;
-        if (response1.ok){
-            fetch('/student/'+sid)
-            .then(response => response.text())
-            .then(data => showStudent(data))
-        } else {
-            throw new Error(response.status)//new keyword constructs a this obj and assign {name: "error", message:""}
-
-        }    
-        
-}).catch(e => {
-    if (e.message == 303) {
-        alert("User not logged in.")
-        window.open("index.html", "_self")
-    }else if (e.message == 500) {
-        alert("Server error!")
-    }
-})
-resetform();
-}
-
-function deleteStudent(r){
-    // this(input)-> td -> tr
-    if (confirm('Are you sure want to DELETE THIS?')){
-        selectedRow = r.parentElement.parentElement;
-        sid = selectedRow.cells[0].innerHTML;
-
-        fetch('/student/'+sid, {
-            method: "DELETE",
-            headers: {"Content-type": "application/json; charset=UTP-8"}
-        });
-        var rowIndex = selectedRow.rowIndex;//index starts from 0
-        if (rowIndex>0) {//this row 0
-           document.getElementById("mytable").deleteRow(rowIndex); 
-        }
-        selectedRow = null
-    }
-}
-
-function showStudent(data) {
-    const student = JSON.parse(data)
-    //Find a <table> element with id="myTable":
-    var table = document.getElementById("myTable")
-    //create an empty <tr> element and add to the last position of the table:
-    var row = table.insertRow(table.length);
-
-    //Inset new cells (<td>elements) at the 1st and 2nd position of the "new" <tr> element:
-    var td=[]
-    for(i=0; i<table.rows[0].cells.length; i++){
-        td[i] = row.insertCell(i)
-    }
-    //Add student details to the new cells
-    td[0].innerHTML = student.stdid;
-    td[1].innerHTML = student.fname;
-    td[2].innerHTML = student.lname;
-    td[3].innerHTML = student.email;
-    td[4].innerHTML = '<input type="button" onclick="deleteStudent(this)" value="delete" id="button-1">';
-    td[5].innerHTML = '<input type="button" onclick="updateStudent(this)" value="edit" id="button-2">';
-}
-function newRow(student) {
-    // Find a <table> element with id="myTable":
-    var table = document.getElementById("myTable")
-    // Create an empty <tr> element and add it to the last position of the table:
-    var row = table.insertRow(table.length);
-    // Insert new cells (<td> elements) in new <tr> element:
-    var td = [];
-    // Iterate the loop till the row 0 cell length in the table
-    for (i = 0; i < table.rows[0].cells.length; i++) {
-        td[i] = row.insertCell(i);
-    }
-    //Add student details to the new cells
-    td[0].innerHTML = student.stdid;
-    td[1].innerHTML = student.fname;
-    td[2].innerHTML = student.lname;
-    td[3].innerHTML = student.email;
-    td[4].innerHTML = '<input type="button" onclick="deleteStudent(this)" value="delete" id="button-1">';
-    td[5].innerHTML = '<input type="button" onclick="updateStudent(this)" value="edit" id="button-2">';
-}
-function showStudents(data) {
-    const students = JSON.parse(data)
-    students.forEach(stud => {
-        // Find a <table> element with id= "mytable":
-        var table = document.getElementById("myTable");
-        // Create an empty <tr> element and add to the last position of the table:
-        var row = table.insertRow(table.length);
-        // Insert new cells (<td> elements) in new <tr> element:
-        var td=[]
-        // Iterate the loop till the row 0 cell length in the table
-        for(i=0; i<table.rows[0].cells.length; i++){
-            td[i] = row.insertCell(i);
-        }
-        // Add student detail to the new cells:
-        td[0].innerHTML = studstdid;
-        td[1].innerHTML = stud.fname;
-        td[2].innerHTML = stud.lname;
-        td[3].innerHTML = stud.email;
-        td[4].innerHTML = '<input type= "button" onclick="deleteStudent(this)" value="delete" id="button-1">';
-        td[5].innerHTML = '<input type="button" onclick="updateStudent(this) value="edit" id="button-2">';
-        
+        body: JSON.stringify({
+            stdid: data.stdid,
+            firstname: data.firstname,
+            lastname: data.lastname,
+            email: data.email,
+        }),
+        headers: {"Content-Type": "application/json; charset=UTF-8"},
     })
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            resetForm()
+            loadStudents()
+        })
+        .catch(error => {
+            alert("Unable to add student: " + error.message)
+        })
+}
+
+function deleteStudent(button) {
+    if (!confirm('Are you sure you want to delete this student?')) {
+        return
+    }
+    const row = button.parentElement.parentElement
+    const sid = row.cells[0].innerText
+
+    fetch('/student/' + sid, {
+        method: "DELETE",
+        headers: {"Content-Type": "application/json; charset=UTF-8"},
+    })
+        .then(async response => {
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null)
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            row.remove()
+        })
+        .catch(error => {
+            alert("Unable to delete student: " + error.message)
+        })
 }
 
 function newRow(table, student) {
- // Create an empty <tr> element and add it to the last position of the
-table:
- var row = table.insertRow(table.length);
- // Insert new cells (<td> elements) in new <tr> element:
- var td=[]
- // Iterate the loop till the row 0 cell length in the table
- for(i=0; i<table.rows[0].cells.length; i++){
- td[i] = row.insertCell(i);
- }
- // Add student detail to the new cells:
- td[0].innerHTML = student.stdid;
- td[1].innerHTML = student.fname;
- td[2].innerHTML = student.lname;
- td[3].innerHTML = student.email;
- td[4].innerHTML = '<input type="button" onclick="deleteStudent(this)" value="delete" id="button-1">';
- td[5].innerHTML = '<input type="button" onclick="updateStudent(this)"value="edit" id="button-2">';
+    const row = table.insertRow(-1)
+    row.insertCell(0).innerText = student.stdid
+    row.insertCell(1).innerText = student.firstname || student.fname
+    row.insertCell(2).innerText = student.lastname || student.lname
+    row.insertCell(3).innerText = student.email
+    row.insertCell(4).innerHTML = '<input type="button" onclick="deleteStudent(this)" value="Delete" class="button-1">'
+    row.insertCell(5).innerHTML = '<input type="button" onclick="editStudent(this)" value="Edit" class="button-2">'
 }
 
-var selectedRow = null;
-function updateStudent(r) {
-    selectedRow = r.parentElement.parentElement;
-    // fill in the form fields with selected row data
-    document.getElementById("sid").value = selectedRow.cells[0].innerHTML;
-    document.getElementById("fname").value = selectedRow.cells[1].innerHTML;
-    document.getElementById("lname").value = selectedRow.cells[2].innerHTML;
-    Document.getElementById("email").value = selectedRow.cells[3].innerHTML;
+function showStudents(students) {
+    const table = document.getElementById("myTable")
+    if (!Array.isArray(students)) {
+        alert("Unable to load student list")
+        return
+    }
+    // Remove existing rows except heading
+    while (table.rows.length > 1) {
+        table.deleteRow(1)
+    }
+    students.forEach(student => newRow(table, student))
+}
 
-    var btn = document.getElementById("button-add");
-    sid = selectedRow.cells[0].innerHTML;
-    if (btn) {
-        btn.innerHTML = "Update";
-        btn.setAttribute("onclick", "update(sid");
+function editStudent(button) {
+    selectedRow = button.parentElement.parentElement
+    selectedSid = selectedRow.cells[0].innerText
+    document.getElementById("sid").value = selectedSid
+    document.getElementById("fname").value = selectedRow.cells[1].innerText
+    document.getElementById("lname").value = selectedRow.cells[2].innerText
+    document.getElementById("email").value = selectedRow.cells[3].innerText
 
+    const btn = document.getElementById("button-add")
+    btn.innerText = "Update"
+    btn.onclick = function () {
+        updateStudent(selectedSid)
+    }
+}
+
+function updateStudent(oldSid) {
+    const data = getFormData()
+    if (!validateFormData(data)) {
+        return
     }
 
-}
-
-function update(sid) {
-    // data to be send to the UPDATE request
-    var newDate = getFormDate()
-    fetch('/student/'+sid, {
+    fetch('/student/update/' + oldSid, {
         method: "PUT",
-        body: JSON.stringify(newData),
-        headers: {"Content-type": "application/json; charset=UTP-8"}
-    }).then (res => {
-        if (res.ok) {
-            // fill in selected row wiht updated value
-            selectedRow.cells[0].innerHTML = newData.stdid;
-            selectedRow.cells[1].innerHTML = newData.fname;
-            selectedRow.cells[2].innerHTML = newData.lname;
-            selectedRow.cells[3].innerHTML = newData.email;
-            // set to previous value
-            var button = document.getElementById("button-add");
-            button.innerHTML = "Add";
-            button.setAttribute("onclick", "addStudent()");
-            selectedRow = null;
-
-            resetform();
-        }else {
-            alert("Server: Update request error.")
-        }
+        body: JSON.stringify({
+            stdid: data.stdid,
+            firstname: data.firstname,
+            lastname: data.lastname,
+            email: data.email,
+        }),
+        headers: {"Content-Type": "application/json; charset=UTF-8"},
     })
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            resetForm()
+            document.getElementById("button-add").innerText = "Add"
+            document.getElementById("button-add").onclick = addStudent
+            selectedRow = null
+            selectedSid = null
+            loadStudents()
+        })
+        .catch(error => {
+            alert("Unable to update student: " + error.message)
+        })
 }
-// set form fields to empty
-function resetform() {
-    document.getElementById("sid").value = "";
-    document.getElementById("fname").value = "";
-    document.getElementById("lname").value = "";
-    document.getElementById("email").value = "";
+
+function resetForm() {
+    document.getElementById("sid").value = ""
+    document.getElementById("fname").value = ""
+    document.getElementById("lname").value = ""
+    document.getElementById("email").value = ""
 }
-window.onload = function () {
+
+function loadStudents() {
     fetch('/students')
-    .then(response => response.text())
-    .then(data => showStudents(data));
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            showStudents(payload)
+        })
+        .catch(error => {
+            alert("Unable to load students: " + error.message)
+        })
 }
 
-function showStudents(data) {
-    const students = JSON.parse(data)
-    var table = document.getElementById("mytable");
-
-    students.forEach( stud => {
-        newRow(table, stud)
-    })
-}
-function showStudent(data) {
-    const student = JSON.parse(data)
-    var table = document.getElementById("mytable")
-    newRow(table, student)
-}
-function getFormData() {
-    var formData = {
-        stdid : parseInt(document.getElementById("sid").value),
-        fname : document.getElementById("fname").value,
-        lname : document.getElementById("lname").value,
-        email : document.getElementById("email").value
-    }
-    return formData
-}
+window.onload = loadStudents

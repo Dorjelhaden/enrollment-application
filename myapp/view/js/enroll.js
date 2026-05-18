@@ -1,116 +1,145 @@
-function getStudents(data) {
- const students = [] // to store all student ID
- const allStudents = JSON.parse(data)
- // add student id to students list
- allStudents.forEach(stud => {
- students.push(stud.stdid)
- });
- // get the sid input field
- var select = document.getElementById("sid")
- // iterate over the students and create a new option for each ID
- for (var i = 0; i < students.length; i++) {
- var sid = students[i];
- var option = document.createElement("option")
- option.textContent= sid;
- option.value = sid;
- select.appendChild(option);
- }
+function populateStudentSelect(students) {
+    const select = document.getElementById("sid")
+    if (!select || !Array.isArray(students)) {
+        return
+    }
+    select.innerHTML = ""
+    students.forEach(student => {
+        const option = document.createElement("option")
+        option.textContent = student.stdid
+        option.value = student.stdid
+        select.appendChild(option)
+    })
 }
 
-function getCourses(data) {
-    const courses = []
-    const allCouses = JSON.parse(data)
-    allCourses.forEach(courses => {
-        courses.push(courses.cid)
-    });
-
-    var option = "";
-    for (var i = 0; i < courses.length; i++) {
-        option += '<option value="'+ courses[i]+'">'+courses[i]+"</option"
+function populateCourseSelect(courses) {
+    const select = document.getElementById("cid")
+    if (!select || !Array.isArray(courses)) {
+        return
     }
-    document.getElementById("cid").innerHTML = option;
+    select.innerHTML = ""
+    courses.forEach(course => {
+        const option = document.createElement("option")
+        option.textContent = course.cid
+        option.value = course.cid
+        select.appendChild(option)
+    })
 }
 
 function addEnroll() {
-    var _data = {
-        stdid : parseInt(document.getElementById("sid").value),
-        cid : document.getElementById("cid").value,
-    }
-    var sid = _data.stdid;
-    var cid = _data.cid;
+    const stdid = parseInt(document.getElementById("sid").value)
+    const cid = document.getElementById("cid").value
 
-    if (isNaN(sid) || cid == "") {
+    if (isNaN(stdid) || !cid) {
         alert("Select valid data")
         return
     }
+
     fetch('/enroll', {
         method: "POST",
-        body: JSON.stringify(_data),
-        headers: {"Content-type": "application/json; charset=UTF-8"}
-    });
-}
-
-function getEnrolled(data) {
- const enrolled = JSON.parse(data)
- showTable(enrolled)
-
-}
-
-function showTable(enrolled) {
- // Find a <table> element with id="myTable":
- var table = document.getElementById("myTable");
- // Create an empty <tr> element and add it to the last position of the table:
- var row = table.insertRow(table.length);
- // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
- var td=[]
- for(i=0; i<table.rows[0].cells.length; i++){
- td[i] = row.insertCell(i);
- }
- td[0].innerHTML = enrolled.stdid;
- td[1].innerHTML = enrolled.cid;
- td[2].innerHTML = enrolled.date.split("T")[0]; // show only date, ignore time
- td[3].innerHTML = '<input type="button" onclick="deleteEnroll(this)" value="Delete" id="button-1">';
-}
-
-function getAllEnroll(data) {
- const allenroll = JSON.parse(data)
- allenroll.forEach(enroll => {
- showTable(enroll)
- });
-}
-
-const deleteEnroll = async(r) => {
-    if (confirm('Are you sure you want to DELETE this?')){
-        selectedRow = r.parentElement.parentElement;
-        sid = selectedRow.cells[0].innerHTML;
-        cid = selectedRow.cells[1].innerHTML;
-        fetch('/enroll/'+sid+"/"+cid, {
-            method: "DELETE",
-            headers: {"Content-type": "application/json; charset=UTF-8"}
-
-        }).then(response => {
-            if (response.ok) {
-                var rowIndex = selectedRow.rowIndex; //index starts from 0
-                if (rowIndex>0) {
-                    document.getElementById("myTable").deletedRow(rowIndex);
-                }
+        body: JSON.stringify({ stdid, cid }),
+        headers: {"Content-Type": "application/json; charset=UTF-8"},
+    })
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
             }
-        });
-    }
+            loadEnrollments()
+        })
+        .catch(error => {
+            alert("Unable to enroll student: " + error.message)
+        })
 }
 
+function showEnrollment(enrollment) {
+    const table = document.getElementById("myTable")
+    const row = table.insertRow(-1)
+    row.insertCell(0).innerText = enrollment.stdid
+    row.insertCell(1).innerText = enrollment.cid
+    row.insertCell(2).innerText = enrollment.date ? enrollment.date.split("T")[0] : ""
+    row.insertCell(3).innerHTML = '<input type="button" onclick="deleteEnroll(this)" value="Delete">'
+}
+
+function showEnrollments(enrollments) {
+    const table = document.getElementById("myTable")
+    while (table.rows.length > 1) {
+        table.deleteRow(1)
+    }
+    if (!Array.isArray(enrollments)) {
+        return
+    }
+    enrollments.forEach(enrollment => showEnrollment(enrollment))
+}
+
+function deleteEnroll(button) {
+    if (!confirm('Are you sure you want to delete this enrollment?')) {
+        return
+    }
+
+    const row = button.parentElement.parentElement
+    const sid = row.cells[0].innerText
+    const cid = row.cells[1].innerText
+
+    fetch('/enroll/' + sid + '/' + cid, {
+        method: "DELETE",
+    })
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            row.remove()
+        })
+        .catch(error => {
+            alert("Unable to delete enrollment: " + error.message)
+        })
+}
+
+function loadStudents() {
+    fetch('/students')
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            populateStudentSelect(payload)
+        })
+        .catch(error => {
+            alert("Unable to load students: " + error.message)
+        })
+}
+
+function loadCourses() {
+    fetch('/courses')
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            populateCourseSelect(payload)
+        })
+        .catch(error => {
+            alert("Unable to load courses: " + error.message)
+        })
+}
+
+function loadEnrollments() {
+    fetch('/enrolls')
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            showEnrollments(payload)
+        })
+        .catch(error => {
+            alert("Unable to load enrollments: " + error.message)
+        })
+}
 
 window.onload = function () {
-    // request  to get all students
-    fetch('/students')
-    .then(response => response.text())
-    .then(data => getStudents(data));
-    // get all courses
-    fetch('/courses')
-    .then(response => response.text())
-    .then(data => getCourses(data));
-
-    fetch('/enrolls')
-    .then(response => response.text())
-    .then(data => getAllEnroll(data));
+    loadStudents()
+    loadCourses()
+    loadEnrollments()
 }

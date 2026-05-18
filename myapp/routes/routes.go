@@ -20,11 +20,20 @@ func InitializeRoutes() {
 	staticPath := findStaticPath()
 
 	router := mux.NewRouter()
+	router.HandleFunc("/student", controller.AddStudent).Methods("POST")
 	router.HandleFunc("/student/add", controller.AddStudent).Methods("POST")
 	router.HandleFunc("/home/{sid}", controller.GetStudent).Methods("GET")
 	router.HandleFunc("/student/update/{sid}", controller.UpdateStudent).Methods("PUT")
 	router.HandleFunc("/student/{sid}", controller.DeleteStudent).Methods("DELETE")
 	router.HandleFunc("/students", controller.GetAllStudents)
+
+	router.HandleFunc("/enroll", controller.Enroll).Methods("POST")
+	router.HandleFunc("/enrolls", controller.GetEnrolls).Methods("GET")
+	router.HandleFunc("/enroll/{sid}/{cid}", controller.DeleteEnroll).Methods("DELETE")
+
+	router.HandleFunc("/courses", controller.AddCourse).Methods("POST")
+	router.HandleFunc("/courses", controller.GetAllCourses).Methods("GET")
+	router.HandleFunc("/courses/{cid}", controller.DeleteCourse).Methods("DELETE")
 
 	router.HandleFunc("/signup", controller.Signup).Methods("POST")
 	router.HandleFunc("/login", controller.Login).Methods("POST")

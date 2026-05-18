@@ -1,77 +1,88 @@
-function getCourses(data) {
-    const courses = []
-    const allCourses = JSON.parse(data)
-
-    allCourses.forEach(course => {
-        courses.push(course.cid)
-    });
-
-    var select = document.getElementById("cid")
-
-    courses.forEach(cid => {
-        var option = document.createElement("option")
-        option.textContent = cid
-        option.value = cid
-        select.appendChild(option)
-    });
-}
-
-// Add new course
 function addCourse() {
-    var _data = {
-        cid: document.getElementById("courseId").value,
-        cname: document.getElementById("courseName").value
-    }
+    const cid = document.getElementById("cid").value.trim()
+    const cname = document.getElementById("cname").value.trim()
 
-    if (_data.cid === "" || _data.cname === "") {
+    if (!cid || !cname) {
         alert("Enter valid course details")
         return
     }
 
     fetch('/courses', {
         method: "POST",
-        body: JSON.stringify(_data),
-        headers: {"Content-type": "application/json; charset=UTF-8"}
+        body: JSON.stringify({ cid, cname }),
+        headers: {"Content-Type": "application/json; charset=UTF-8"},
     })
-}
-
-// Show one course row
-function showCourse(course) {
-    var table = document.getElementById("courseTable")
-    var row = table.insertRow(table.length)
-
-    row.insertCell(0).innerHTML = course.cid
-    row.insertCell(1).innerHTML = course.cname
-    row.insertCell(2).innerHTML =
-        '<input type="button" value="Delete" onclick="deleteCourse(this)">'
-}
-
-// Load all courses
-function getAllCourses(data) {
-    const allCourses = JSON.parse(data)
-    allCourses.forEach(course => showCourse(course))
-}
-
-// Delete course
-function deleteCourse(btn) {
-    if (confirm("Delete this course?")) {
-        let row = btn.parentElement.parentElement
-        let cid = row.cells[0].innerHTML
-
-        fetch('/courses/' + cid, {
-            method: "DELETE"
-        }).then(res => {
-            if (res.ok) {
-                document.getElementById("courseTable")
-                    .deleteRow(row.rowIndex)
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
             }
+            document.getElementById("cid").value = ""
+            document.getElementById("cname").value = ""
+            loadCourses()
         })
-    }
+        .catch(error => {
+            alert("Unable to add course: " + error.message)
+        })
 }
 
-// On load
-window.onload = function () {
-    fetch('/courses')
-    .then(res => res.text())
-    .then(data => getAllCourses(data))
+function showCourse(course) {
+    const table = document.getElementById("myTable")
+    const row = table.insertRow(-1)
+    row.insertCell(0).innerText = course.cid
+    row.insertCell(1).innerText = course.cname
+    row.insertCell(2).innerHTML = '<input type="button" value="Delete" onclick="deleteCourse(this)">'
 }
+
+function getAllCourses(courses) {
+    const table = document.getElementById("myTable")
+    while (table.rows.length > 1) {
+        table.deleteRow(1)
+    }
+
+    if (!Array.isArray(courses)) {
+        alert("Unable to load course list")
+        return
+    }
+
+    courses.forEach(course => showCourse(course))
+}
+
+function deleteCourse(button) {
+    if (!confirm("Delete this course?")) {
+        return
+    }
+
+    const row = button.parentElement.parentElement
+    const cid = row.cells[0].innerText
+
+    fetch('/courses/' + cid, {
+        method: "DELETE",
+    })
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            row.remove()
+        })
+        .catch(error => {
+            alert("Unable to delete course: " + error.message)
+        })
+}
+
+function loadCourses() {
+    fetch('/courses')
+        .then(async response => {
+            const payload = await response.json().catch(() => null)
+            if (!response.ok) {
+                throw new Error(payload?.error || `HTTP ${response.status}`)
+            }
+            getAllCourses(payload)
+        })
+        .catch(error => {
+            alert("Unable to load courses: " + error.message)
+        })
+}
+
+window.onload = loadCourses
