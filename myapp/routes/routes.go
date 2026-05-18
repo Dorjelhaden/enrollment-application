@@ -39,6 +39,7 @@ func InitializeRoutes() {
 	router.HandleFunc("/signup", controller.Signup).Methods("POST")
 	router.HandleFunc("/login", controller.Login).Methods("POST")
 	router.HandleFunc("/logout", controller.Logout).Methods("GET")
+	router.HandleFunc("/verify", controller.Verify).Methods("GET")
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(staticPath, "index.html"))

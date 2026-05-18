@@ -157,7 +157,7 @@ function resetForm() {
 }
 
 function loadStudents() {
-    fetch('/students')
+    fetch('/students', { credentials: 'same-origin' })
         .then(async response => {
             const payload = await response.json().catch(() => null)
             if (!response.ok) {
@@ -166,8 +166,11 @@ function loadStudents() {
             showStudents(payload)
         })
         .catch(error => {
-            alert("Unable to load students: " + error.message)
+            alert('Unable to load students: ' + error.message)
         })
 }
 
-window.onload = loadStudents
+window.onload = function () {
+    protectPage()
+    loadStudents()
+}

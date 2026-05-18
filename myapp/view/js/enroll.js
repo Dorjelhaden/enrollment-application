@@ -58,7 +58,7 @@ function showEnrollment(enrollment) {
     row.insertCell(0).innerText = enrollment.stdid
     row.insertCell(1).innerText = enrollment.cid
     row.insertCell(2).innerText = enrollment.date ? enrollment.date.split("T")[0] : ""
-    row.insertCell(3).innerHTML = '<input type="button" onclick="deleteEnroll(this)" value="Delete">'
+    row.insertCell(3).innerHTML = '<input type="button" onclick="deleteEnroll(this)" value="Delete" class="btn-delete">'
 }
 
 function showEnrollments(enrollments) {
@@ -139,6 +139,7 @@ function loadEnrollments() {
 }
 
 window.onload = function () {
+    protectPage()
     loadStudents()
     loadCourses()
     loadEnrollments()

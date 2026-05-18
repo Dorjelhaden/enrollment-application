@@ -39,6 +39,9 @@ func AddStudent(w http.ResponseWriter, r *http.Request) {
 	httpResp.RespondWithJSON(w, http.StatusCreated, map[string]string{"status": "student addded"})
 }
 func GetStudent(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 
 	// get URL parameter (id)
 	sid := mux.Vars(r)["sid"]
@@ -69,6 +72,9 @@ func getUserId(userIdParm string) (int64, error) {
 	return userId, nil
 }
 func UpdateStudent(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	old_sid := mux.Vars(r)["sid"]
 	old_stdId, idErr := getUserId(old_sid)
 	if idErr != nil {
@@ -96,6 +102,9 @@ func UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func DeleteStudent(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	sid := mux.Vars(r)["sid"]
 	stdId, idErr := getUserId(sid)
 	if idErr != nil {
@@ -111,6 +120,9 @@ func DeleteStudent(w http.ResponseWriter, r *http.Request) {
 	httpResp.RespondWithJSON(w, http.StatusOK, map[string]string{"status": "student deleted"})
 }
 func GetAllStudents(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	students, getErr := model.GetAllStudents()
 	if getErr != nil {
 		httpResp.RespondWithError(w, http.StatusInternalServerError, getErr.Error())

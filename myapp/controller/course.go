@@ -12,6 +12,9 @@ import (
 )
 
 func AddCourse(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	var c model.Course
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		httpResp.RespondWithError(w, http.StatusBadRequest, "invalid json body")
@@ -34,6 +37,9 @@ func AddCourse(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllCourses(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	courses, err := model.GetAllCourses()
 	if err != nil {
 		httpResp.RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -43,6 +49,9 @@ func GetAllCourses(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateCourse(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	oldCid := mux.Vars(r)["cid"]
 	if oldCid == "" {
 		httpResp.RespondWithError(w, http.StatusBadRequest, "course id is required")
@@ -71,6 +80,9 @@ func UpdateCourse(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteCourse(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	cid := mux.Vars(r)["cid"]
 	if cid == "" {
 		httpResp.RespondWithError(w, http.StatusBadRequest, "course id is required")

@@ -16,6 +16,9 @@ import (
 // var httpResp = helper.httpResponse{}
 
 func Enroll(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	var e model.Enroll
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&e); err != nil {
@@ -40,6 +43,9 @@ func Enroll(w http.ResponseWriter, r *http.Request) {
 	httpResp.RespondWithJSON(w, http.StatusCreated, map[string]string{"status": "enrolled"})
 }
 func GetEnroll(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	// get url parameter
 	sid := mux.Vars(r)["sid"]
 	cid := mux.Vars(r)["cid"]
@@ -59,6 +65,9 @@ func GetEnroll(w http.ResponseWriter, r *http.Request) {
 	httpResp.RespondWithJSON(w, http.StatusOK, e)
 }
 func GetEnrolls(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	enrolls, getErr := model.GetAllEnrolls()
 	if getErr != nil {
 		httpResp.RespondWithError(w, http.StatusBadRequest, getErr.Error())
@@ -67,6 +76,9 @@ func GetEnrolls(w http.ResponseWriter, r *http.Request) {
 	httpResp.RespondWithJSON(w, http.StatusOK, enrolls)
 }
 func DeleteEnroll(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
 	sid := mux.Vars(r)["sid"]
 	cid := mux.Vars(r)["cid"]
 	stdid, _ := strconv.ParseInt(sid, 10, 64)

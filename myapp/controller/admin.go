@@ -41,32 +41,46 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// set cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:    "my-cookie",
-		Value:   "my-value",
-		Expires: time.Now().Add(30 * time.Minute),
-		Secure:  true,
+		Name:     "my-cookie",
+		Value:    "my-value",
+		Path:     "/",
+		Expires:  time.Now().Add(30 * time.Minute),
+		MaxAge:   1800,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 	httpResp.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "login success"})
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
-		Name:    "my-cookie",
-		Expires: time.Now(),
+		Name:     "my-cookie",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		MaxAge:   -1,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 	httpResp.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "cookie deleted"})
 }
+
+func Verify(w http.ResponseWriter, r *http.Request) {
+	if !VerifyCookie(w, r) {
+		return
+	}
+	httpResp.RespondWithJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func VerifyCookie(w http.ResponseWriter, r *http.Request) bool {
 	// Retrieve the "my-cookie" cookie from the request
 	cookie, err := r.Cookie("my-cookie")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			// No cookie found, redirect to login page or return an error
-			httpResp.RespondWithError(w, http.StatusSeeOther, "cookie not  found")
+			httpResp.RespondWithError(w, http.StatusUnauthorized, "cookie not found")
 			return false
 		}
 
-		// Some other error occurred
 		httpResp.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 		return false
 	}
